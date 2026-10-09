@@ -19,20 +19,20 @@
   --text:#e8ece9; --muted:#a3aea8; --faint:#6f7a74;
   --brand:#4cb08a; --brand-soft:#1d3a2f; --brand-ink:#0d1a14; --accent:#e08a5f; --accent-soft:#3a271d;
   --c1:#4cb08a; --c2:#e08a5f; --c3:#7fb2ea; --c4:#b39af0;
-  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none}}
+  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1a201d; --surface-2:#222a26; --border:#2e3833;
   --text:#e8ece9; --muted:#a3aea8; --faint:#6f7a74;
   --brand:#4cb08a; --brand-soft:#1d3a2f; --brand-ink:#0d1a14; --accent:#e08a5f; --accent-soft:#3a271d;
   --c1:#4cb08a; --c2:#e08a5f; --c3:#7fb2ea; --c4:#b39af0;
-  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none}
+  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none; color-scheme:dark}
 *{box-sizing:border-box} html,body{margin:0}
 body{background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 button,select{font:inherit;color:inherit}
 h2{margin:0;font-size:20px} h3{margin:0;font-size:15px}
 .muted{color:var(--muted)} .small{font-size:12px} .num{font-variant-numeric:tabular-nums}
 
-.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
 .topbar-inner{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.02em}
 .switcher{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px}
@@ -391,8 +391,9 @@ function lineChart(svg,series,dates){
   hit.onmouseleave=()=>{hideTip();hv.setAttribute('opacity',0)};
 }
 function downloadCSV(name,rows){
-  const blob=new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const text=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
 /* ================= ADMIN ================= */

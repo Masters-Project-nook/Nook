@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nook Analytics</title>
+<style>
+:root{
+  --bg:#f6f4ef; --surface:#fff; --surface-2:#f1eee7; --border:#e3ded3;
+  --text:#1f2a26; --muted:#66706b; --faint:#9aa29e;
+  --brand:#1f6b52; --brand-soft:#e2efe9; --brand-ink:#fff;
+  --accent:#c4643a; --accent-soft:#f7e6dc;
+  --c1:#1f6b52; --c2:#c4643a; --c3:#2b6cb0; --c4:#805ad5;
+  --up:#2f855a; --down:#c0392b; --warn:#b7791f; --warn-soft:#f8ecd6;
+  --shadow:0 1px 2px rgba(20,30,25,.06),0 4px 14px rgba(20,30,25,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1a201d; --surface-2:#222a26; --border:#2e3833;
+  --text:#e8ece9; --muted:#a3aea8; --faint:#6f7a74;
+  --brand:#4cb08a; --brand-soft:#1d3a2f; --brand-ink:#0d1a14; --accent:#e08a5f; --accent-soft:#3a271d;
+  --c1:#4cb08a; --c2:#e08a5f; --c3:#7fb2ea; --c4:#b39af0;
+  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1a201d; --surface-2:#222a26; --border:#2e3833;
+  --text:#e8ece9; --muted:#a3aea8; --faint:#6f7a74;
+  --brand:#4cb08a; --brand-soft:#1d3a2f; --brand-ink:#0d1a14; --accent:#e08a5f; --accent-soft:#3a271d;
+  --c1:#4cb08a; --c2:#e08a5f; --c3:#7fb2ea; --c4:#b39af0;
+  --up:#6fcf97; --down:#ef7d6f; --warn:#e3b05a; --warn-soft:#3a2f1c; --shadow:none}
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+h2{margin:0;font-size:20px} h3{margin:0;font-size:15px}
+.muted{color:var(--muted)} .small{font-size:12px} .num{font-variant-numeric:tabular-nums}
+
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+.switcher{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px}
+.switcher button{border:0;background:none;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:600;white-space:nowrap}
+.switcher button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pill{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:999px}
+.icon-btn{border:1px solid var(--border);background:var(--surface);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
+
+main{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
+.view{display:none}.view.active{display:block}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.head p{margin:4px 0 0}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+select{border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 10px}
+.btn{border:1px solid var(--border);background:var(--surface);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn:hover{background:var(--surface-2)}
+
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.two{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){.two,.even,.three{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sec{margin-top:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px;min-width:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.kpi .l{color:var(--muted);font-size:12px;font-weight:600}
+.kpi .v{font-size:26px;font-weight:750;letter-spacing:-.02em;margin-top:2px}
+.kpi .d{font-size:12px;color:var(--muted)}
+.kpi svg{display:block;width:100%;height:28px;margin-top:8px}
+.up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}
+
+.seg{display:inline-flex;background:var(--surface-2);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend i.dash{height:0;border-top:2px dashed var(--faint);border-radius:0;width:14px;vertical-align:3px}
+svg.chart{width:100%;height:240px;display:block}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto;margin:0 -16px;padding:0 16px}
+th.sortable{cursor:pointer} th.sortable:hover{color:var(--text)}
+
+.bars .row{display:grid;grid-template-columns:130px 1fr 64px;gap:10px;align-items:center;padding:5px 0}
+.track{height:10px;background:var(--surface-2);border-radius:999px;position:relative}
+.track span{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--brand)}
+.track i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text);opacity:.45}
+
+.funnel .step{margin-bottom:10px}
+.funnel .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.funnel .fb{height:26px;border-radius:6px;background:var(--brand);opacity:.9;display:flex;align-items:center;padding-left:8px;color:var(--brand-ink);font-size:12px;font-weight:700;min-width:36px}
+.funnel .drop{font-size:11px;color:var(--muted);margin:2px 0 0 4px}
+
+.heat{display:grid;grid-template-columns:30px repeat(15,minmax(0,1fr));gap:3px;font-size:10px;color:var(--muted)}
+.heat .c{height:24px;border-radius:3px}
+.heat .ax{display:flex;align-items:center;justify-content:center}
+
+.donut-wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut-wrap svg{width:130px;height:130px;flex:none}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:8px 12px;border-radius:0 8px 8px 0;font-size:12px;margin-top:12px}
+.meter{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.meter span{display:block;height:100%;background:var(--brand)}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.badge.g{background:var(--brand-soft);color:var(--brand)} .badge.w{background:var(--warn-soft);color:var(--warn)}
+.biz-hero{display:flex;gap:12px;align-items:center}
+.biz-logo{width:48px;height:48px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:20px}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-row:last-child{border-bottom:0}
+.tip{position:fixed;pointer-events:none;background:var(--text);color:var(--surface);font-size:12px;padding:6px 8px;border-radius:6px;opacity:0;z-index:50;white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <div class="logo"><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--brand)"/><path d="M16 7c-4.4 0-8 3.4-8 7.7C8 20.5 16 26 16 26s8-5.5 8-11.3C24 10.4 20.4 7 16 7z" fill="var(--brand-ink)"/><circle cx="16" cy="14.5" r="3" fill="var(--brand)"/></svg>nook</div>
+  <nav class="switcher" role="tablist">
+    <button role="tab" data-view="admin" aria-selected="true">Admin analytics</button>
+    <button role="tab" data-view="business" aria-selected="false">Business analytics</button>
+  </nav>
+  <div class="top-right">
+    <span class="pill" title="Layout mock-up. All figures and business names are invented.">Mock-up · sample data</span>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+  </div>
+</div></header>
+
+<main>
+<!-- ======================= ADMIN ======================= -->
+<section class="view active" id="view-admin">
+  <div class="head">
+    <div><h2>Platform analytics</h2><p class="muted">How tourists and locals use Nook across the four launch areas.</p></div>
+    <div class="controls">
+      <select id="aArea"><option value="all">All areas</option></select>
+      <select id="aRange"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select>
+      <button class="btn" id="aExport">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="grid kpis" id="aKpis"></div>
+
+  <div class="grid two sec">
+    <div class="card">
+      <div class="card-head"><h3>App sessions by area</h3><div class="legend" id="aLegend"></div></div>
+      <svg class="chart" id="aChart"></svg>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Discovery funnel</h3><span class="small muted">Sessions → directions</span></div>
+      <div class="funnel" id="aFunnel"></div>
+    </div>
+  </div>
+
+  <div class="card sec">
+    <div class="card-head"><h3>Area performance</h3><span class="small muted">Click a column to sort · marker on coverage = example target of 15</span></div>
+    <div class="tw"><table id="areaTable"><thead><tr>
+      <th>Area</th><th class="r sortable" data-k="biz">Listed businesses</th><th style="min-width:140px">Coverage</th>
+      <th class="r sortable" data-k="sessions">Sessions</th><th class="r sortable" data-k="views">Profile views</th>
+      <th class="r sortable" data-k="dirs">Directions</th><th class="r sortable" data-k="conv">View → directions</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- ---------- sign-ins & accounts ---------- -->
+  <div class="grid kpis sec" id="loginKpis"></div>
+  <div class="grid two sec">
+    <div class="card">
+      <div class="card-head"><h3>Sign-ins over time</h3>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Sign-ins</span><span><i style="background:var(--c2)"></i>New accounts</span><span><i style="background:var(--c3)"></i>Failed sign-ins</span></div>
+      </div>
+      <svg class="chart" id="loginChart"></svg>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Accounts</h3><span class="small muted">Total to date</span></div>
+      <div class="bars" id="acctTypes"></div>
+      <h3 style="margin:16px 0 8px;font-size:13px">Sign-in method</h3>
+      <div class="bars" id="loginMethods"></div>
+      <h3 style="margin:16px 0 8px;font-size:13px">Sign-ins by platform</h3>
+      <div class="bars" id="loginPlatforms"></div>
+    </div>
+  </div>
+  <div class="grid even sec">
+    <div class="card">
+      <div class="card-head"><h3>Sign-ins by hour</h3><span class="small muted">All days, this period</span></div>
+      <svg class="chart" id="loginHours" style="height:180px"></svg>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Account security</h3><span class="badge g" id="secBadge">Healthy</span></div>
+      <div id="secStats"></div>
+      <div class="note">Consumer account features are still being defined. Guest browsing without signing in is shown separately.</div>
+    </div>
+  </div>
+
+  <!-- ---------- countries ---------- -->
+  <div class="grid two sec">
+    <div class="card">
+      <div class="card-head"><h3>Visitors by country</h3><span class="small muted">Click a column to sort</span></div>
+      <div class="tw"><table id="countryTable"><thead><tr>
+        <th>#</th><th>Country</th><th class="r sortable" data-k="sessions">Sessions</th><th style="min-width:120px">Share</th>
+        <th class="r sortable" data-k="change">Change</th><th class="r sortable" data-k="dirRate">View → directions</th><th>Top area</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Tourists vs locals</h3></div>
+      <div class="donut-wrap"><svg id="originDonut" viewBox="0 0 42 42"></svg><div class="legend" style="flex-direction:column;gap:6px" id="originLegend"></div></div>
+      <h3 style="margin:16px 0 8px;font-size:13px">International sessions by month</h3>
+      <div id="intlMonths"></div>
+      <div class="note">Country comes from the device's region setting, not GPS. Nothing is stored for individual users.</div>
+    </div>
+  </div>
+
+  <div class="grid three sec">
+    <div class="card">
+      <div class="card-head"><h3>Views by category</h3></div>
+      <div class="bars" id="aCats"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Most used filters</h3><span class="small muted">% of searches</span></div>
+      <div class="bars" id="aFilters"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Location permission</h3></div>
+      <div class="donut-wrap"><svg id="aDonut" viewBox="0 0 42 42"></svg><div class="legend" style="flex-direction:column;gap:6px" id="aDonutLegend"></div></div>
+      <div class="note">Location is used for the map only and not stored (R9). Denied-permission behaviour is still undecided.</div>
+    </div>
+  </div>
+
+  <div class="grid two sec">
+    <div class="card">
+      <div class="card-head"><h3>Top businesses</h3><span class="small muted">By profile views</span></div>
+      <div class="tw"><table id="topBiz"><thead><tr><th>#</th><th>Business</th><th>Category</th><th>Area</th><th class="r">Views</th><th class="r">Directions</th><th class="r">Trend</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="card">
+        <div class="card-head"><h3>Eligibility screening</h3><span class="small muted">This period</span></div>
+        <div id="aScreen"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Places API usage</h3><span class="badge w" id="apiBadge"></span></div>
+        <div class="num" style="font-size:22px;font-weight:750" id="apiCalls"></div>
+        <div class="meter"><span id="apiMeter"></span></div>
+        <div class="small muted" style="margin-top:6px" id="apiSub"></div>
+        <div class="note">Tracks R6. Provider not selected yet, so the allowance shown is a placeholder.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BUSINESS ======================= -->
+<section class="view" id="view-business">
+  <div class="head">
+    <div class="biz-hero"><div class="biz-logo">K</div>
+      <div><h2>Kiln &amp; Kettle</h2><p class="muted" style="margin:2px 0 0">Café · Merchiston/Bruntsfield · <span class="badge g">Approved independent</span></p></div>
+    </div>
+    <div class="controls">
+      <select id="bRange"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select>
+      <button class="btn" id="bExport">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="grid kpis" id="bKpis"></div>
+
+  <div class="grid two sec">
+    <div class="card">
+      <div class="card-head">
+        <h3>Performance over time</h3>
+        <div class="seg" id="bMetric">
+          <button data-m="views" aria-pressed="true">Profile views</button>
+          <button data-m="dirs" aria-pressed="false">Directions</button>
+          <button data-m="web" aria-pressed="false">Website</button>
+        </div>
+      </div>
+      <svg class="chart" id="bChart"></svg>
+      <div class="legend" style="margin-top:6px"><span><i style="background:var(--brand)"></i>This period</span><span><i class="dash"></i>Previous period</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>From map to your door</h3></div>
+      <div class="funnel" id="bFunnel"></div>
+    </div>
+  </div>
+
+  <div class="grid even sec">
+    <div class="card">
+      <div class="card-head"><h3>When people look you up</h3><span class="small muted">Profile views by day and hour</span></div>
+      <div class="heat" id="bHeat"></div>
+      <div class="small muted" style="margin-top:8px" id="bPeak"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>You vs similar cafés nearby</h3><span class="small muted">Median of 9 cafés in your area</span></div>
+      <div id="bBench"></div>
+    </div>
+  </div>
+
+  <div class="grid three sec">
+    <div class="card">
+      <div class="card-head"><h3>How people found you</h3></div>
+      <div class="bars" id="bSources"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Filters that surfaced you</h3></div>
+      <div class="bars" id="bFilters"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Listing health</h3><span class="badge g" id="bHealthScore"></span></div>
+      <div id="bHealth"></div>
+    </div>
+  </div>
+  <div class="grid even sec">
+    <div class="card">
+      <div class="card-head"><h3>Where your visitors are from</h3><span class="small muted">Share of profile views</span></div>
+      <div class="bars" id="bCountries"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Signed-in visitors</h3></div>
+      <div id="bSigned"></div>
+    </div>
+  </div>
+  <div class="note">Which analytics Nook tracks is not approved yet. Everything here is aggregated; no individual visitor data is shown.</div>
+</section>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-GB');
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const tip=$('#tip');
+const showTip=(e,h)=>{tip.innerHTML=h;tip.style.opacity=1;tip.style.left=Math.min(e.clientX+12,innerWidth-180)+'px';tip.style.top=(e.clientY+12)+'px'};
+const hideTip=()=>tip.style.opacity=0;
+let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647,(seed-1)/2147483646);
+
+/* ---------- shared sample data (fictional) ---------- */
+const N=180, END=new Date(2026,9,9);
+const DATES=[...Array(N)].map((_,i)=>{const d=new Date(END);d.setDate(d.getDate()-(N-1-i));return d});
+const wk=d=>[0,6].includes(d.getDay());
+const AREAS=[
+  {name:'Merchiston/Bruntsfield',biz:14,base:140,c:'--c1'},
+  {name:'Craiglockhart',biz:6,base:55,c:'--c2'},
+  {name:'Sighthill/Calder',biz:4,base:38,c:'--c3'},
+  {name:'Galashiels/Tweedbank',biz:9,base:72,c:'--c4'},
+];
+AREAS.forEach(a=>{
+  a.sessions=DATES.map((d,i)=>Math.round(a.base*(0.55+i/N*0.6)*(wk(d)?1.35:1)*(0.85+rnd()*0.3)));
+  a.views=a.sessions.map(s=>Math.round(s*(1.7+rnd()*0.4)));
+  a.dirs=a.views.map(v=>Math.round(v*(0.11+rnd()*0.05)));
+});
+AREAS.forEach(a=>$('#aArea').insertAdjacentHTML('beforeend',`<option>${a.name}</option>`));
+
+/* ---------- helpers ---------- */
+function spark(arr,color,style=''){
+  const w=120,h=28,mx=Math.max(...arr),mn=Math.min(...arr);
+  const p=arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-2-(v-mn)/(mx-mn||1)*(h-4)).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="${style}"><polyline points="${p}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function delta(cur,prev){ if(!prev) return '<span class="muted">—</span>'; const d=Math.round((cur-prev)/prev*100); return `<span class="${d>=0?'up':'down'}">${d>=0?'▲':'▼'} ${Math.abs(d)}%</span>`; }
+function kpi(label,cur,prev,arr,color){
+  return `<div class="card kpi"><div class="l">${label}</div><div class="v num">${fmt(cur)}</div><div class="d">${delta(cur,prev)} vs previous period</div>${arr?spark(arr,color):''}</div>`;
+}
+function bars(id,rows,{max,unit=''}={}){
+  const mx=max||Math.max(...rows.map(r=>r[1]));
+  $(id).innerHTML=rows.map(([l,v])=>`<div class="row"><span class="small">${l}</span><div class="track"><span style="width:${v/mx*100}%"></span></div><span class="small num" style="text-align:right">${fmt(v)}${unit}</span></div>`).join('');
+}
+function funnel(id,steps){
+  const top=steps[0][1];
+  $(id).innerHTML=steps.map(([l,v],i)=>`<div class="step"><div class="top"><span>${l}</span><b class="num">${fmt(v)}</b></div>
+    <div class="fb" style="width:${Math.max(v/top*100,6)}%">${Math.round(v/top*100)}%</div>
+    ${i?`<div class="drop">${Math.round(v/steps[i-1][1]*100)}% of previous step</div>`:''}</div>`).join('');
+}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v||1)));for(const k of [1,1.2,1.6,2,3,4,5,6,8,10]) if(k*m>=v) return k*m;}
+function lineChart(svg,series,dates){
+  const W=svg.getBoundingClientRect().width; if(!W) return;
+  const H=240,P={l:40,r:10,t:10,b:24}; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const mx=niceMax(Math.max(...series.flatMap(s=>s.data)));
+  const n=dates.length, x=i=>P.l+i/(n-1)*(W-P.l-P.r), y=v=>H-P.b-v/mx*(H-P.t-P.b);
+  const grid=css('--border'),muted=css('--muted');
+  let s='';
+  for(let g=0;g<=4;g++){const v=mx/4*g;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="${grid}"/><text x="${P.l-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="${muted}">${v>=1000?(v/1000)+'k':v}</text>`}
+  const step=Math.ceil(n/6);
+  dates.forEach((d,i)=>{if(i%step===0)s+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${muted}">${d.getDate()} ${d.toLocaleString('en-GB',{month:'short'})}</text>`});
+  series.forEach(se=>{
+    const path=se.data.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+    if(se.fill) s+=`<path d="${path}L${x(n-1)},${y(0)}L${x(0)},${y(0)}Z" fill="${se.color}" opacity=".1"/>`;
+    s+=`<path d="${path}" fill="none" stroke="${se.color}" stroke-width="${se.dash?1.5:2.25}" ${se.dash?'stroke-dasharray="4 4"':''} stroke-linejoin="round"/>`;
+  });
+  s+=`<line class="hv" y1="${P.t}" y2="${H-P.b}" stroke="${muted}" stroke-dasharray="3 3" opacity="0"/><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}" fill="transparent" class="hit"/>`;
+  svg.innerHTML=s;
+  const hv=$('.hv',svg), hit=$('.hit',svg);
+  hit.onmousemove=e=>{
+    const r=svg.getBoundingClientRect(),i=Math.max(0,Math.min(n-1,Math.round((e.clientX-r.left-P.l)/(W-P.l-P.r)*(n-1))));
+    hv.setAttribute('x1',x(i));hv.setAttribute('x2',x(i));hv.setAttribute('opacity',1);
+    showTip(e,`<b>${dates[i].toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}</b>`+series.map(se=>`<br><span style="color:${se.color}">●</span> ${se.name}: ${fmt(se.data[i])}`).join(''));
+  };
+  hit.onmouseleave=()=>{hideTip();hv.setAttribute('opacity',0)};
+}
+function downloadCSV(name,rows){
+  const blob=new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ================= ADMIN ================= */
+let areaSort={k:'sessions',dir:-1};
+
+/* ---------- sign-ins (sample) ---------- */
+const LOGIN={signins:[],newAcc:[],failed:[]};
+DATES.forEach((d,i)=>{const s=sum(AREAS.map(a=>a.sessions[i]));LOGIN.signins.push(Math.round(s*(0.34+rnd()*0.08)));LOGIN.newAcc.push(Math.round(s*(0.018+rnd()*0.012)));LOGIN.failed.push(Math.round(s*(0.008+rnd()*0.008)))});
+const HOURS=[...Array(24)].map((_,h)=>Math.max(0.03,Math.exp(-((h-12)**2)/14)+Math.exp(-((h-18)**2)/8)*0.8)*(0.9+rnd()*0.2));
+function vbars(svg,vals,labelEvery,fmtLabel){
+  const W=svg.getBoundingClientRect().width; if(!W) return;
+  const H=180,P={l:34,r:6,t:8,b:22}; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const mx=niceMax(Math.max(...vals)), n=vals.length, bw=(W-P.l-P.r)/n, y=v=>H-P.b-v/mx*(H-P.t-P.b);
+  const grid=css('--border'),muted=css('--muted'),brand=css('--brand'); let s='';
+  for(let g=0;g<=2;g++){const v=mx/2*g;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="${grid}"/><text x="${P.l-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="${muted}">${fmt(v)}</text>`}
+  vals.forEach((v,i)=>{s+=`<rect class="vb" data-t="${fmtLabel(i)} · ${fmt(v)}" x="${P.l+i*bw+bw*0.15}" y="${y(v)}" width="${bw*0.7}" height="${y(0)-y(v)}" rx="2" fill="${brand}"/>`;
+    if(i%labelEvery===0) s+=`<text x="${P.l+i*bw+bw/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="${muted}">${fmtLabel(i)}</text>`});
+  svg.innerHTML=s;
+  $$('.vb',svg).forEach(r=>{r.onmousemove=e=>showTip(e,r.dataset.t);r.onmouseleave=hideTip});
+}
+function renderLogins(n,areas,S){
+  const share=sum(areas.map(a=>a.base))/sum(AREAS.map(a=>a.base));
+  const L=k=>LOGIN[k].map(v=>v*share), cur=a=>a.slice(-n), prev=a=>a.slice(-2*n,-n);
+  const si=sum(cur(L('signins'))), na=sum(cur(L('newAcc'))), fl=sum(cur(L('failed'))), sess=sum(cur(S));
+  const active=Math.round(si*0.42), dau=Math.round(active/n*2.1);
+  $('#loginKpis').innerHTML=
+    kpi('Sign-ins',si,sum(prev(L('signins'))),cur(L('signins')),css('--c1'))+
+    kpi('New accounts',na,sum(prev(L('newAcc'))),cur(L('newAcc')),css('--c2'))+
+    `<div class="card kpi"><div class="l">Active signed-in users</div><div class="v num">${fmt(active)}</div><div class="d">~${fmt(dau)} per day · ${Math.round(dau/active*100)}% stickiness</div></div>`+
+    `<div class="card kpi"><div class="l">Guest sessions</div><div class="v num">${Math.round((1-si/sess)*100)}%</div><div class="d">Browsed without signing in</div></div>`+
+    `<div class="card kpi"><div class="l">Returning users</div><div class="v num">${Math.round(58+share*6)}%</div><div class="d">Signed in again within 30 days</div></div>`;
+  lineChart($('#loginChart'),[
+    {name:'Sign-ins',color:css('--c1'),data:cur(L('signins')),fill:true},
+    {name:'New accounts',color:css('--c2'),data:cur(L('newAcc'))},
+    {name:'Failed sign-ins',color:css('--c3'),data:cur(L('failed'))}],cur(DATES));
+  bars('#acctTypes',[['Consumer',Math.round(4820*share)],['Business',Math.round(sum(areas.map(a=>a.biz))*1.2)],['Admin / reviewer',4]]);
+  bars('#loginMethods',[['Apple',38],['Google',34],['Email & password',22],['Magic link',6]],{max:100,unit:'%'});
+  bars('#loginPlatforms',[['iOS',57],['Android',39],['Web (business)',4]],{max:100,unit:'%'});
+  const tot=sum(HOURS); vbars($('#loginHours'),HOURS.map(h=>h/tot*si),3,i=>String(i).padStart(2,'0')+':00');
+  const failRate=fl/(si+fl)*100;
+  $('#secStats').innerHTML=[
+    ['Failed sign-in rate',failRate.toFixed(1)+'%'],['Password resets',fmt(fl*0.35)],['Accounts locked (5 failed attempts)',fmt(fl*0.02)],
+    ['Business accounts with 2FA','78%'],['Admin accounts with 2FA','100%'],['Accounts deleted by users',fmt(na*0.04)]
+  ].map(([l,x])=>`<div class="stat-row"><span class="muted">${l}</span><b class="num">${x}</b></div>`).join('');
+  $('#secBadge').textContent=failRate>3?'Check':'Healthy'; $('#secBadge').className='badge '+(failRate>3?'w':'g');
+}
+
+/* ---------- countries (sample) ---------- */
+const COUNTRIES=[
+  ['GB','United Kingdom',.50],['US','United States',.115],['DE','Germany',.064],['FR','France',.052],['ES','Spain',.041],
+  ['NL','Netherlands',.032],['CA','Canada',.03],['AU','Australia',.028],['IT','Italy',.027],['IE','Ireland',.022],
+  ['CN','China',.018],['IN','India',.016],['Other','Other (38 countries)',.035]
+].map(([code,name,share],i)=>({code,name,share,change:Math.round((rnd()-0.35)*40),dirRate:11+rnd()*6,top:i%3===1?'Galashiels/Tweedbank':'Merchiston/Bruntsfield'}));
+let countrySort={k:'sessions',dir:-1};
+const code=c=>`<span style="display:inline-block;min-width:26px;text-align:center;font-size:10px;font-weight:700;padding:1px 4px;border-radius:4px;background:var(--surface-2);color:var(--muted);margin-right:8px">${c==='Other'?'…':c}</span>`;
+function renderCountries(n,areas,s){
+  const rows=COUNTRIES.map(c=>({...c,sessions:s*c.share,top:areas.length===1?areas[0].name:c.top}));
+  const named=rows.filter(r=>r.code!=='Other').sort((a,b)=>(a[countrySort.k]-b[countrySort.k])*countrySort.dir);
+  const all=[...named,rows.find(r=>r.code==='Other')], mxs=Math.max(...rows.map(r=>r.share));
+  $('#countryTable tbody').innerHTML=all.map((r,i)=>`<tr><td class="muted">${r.code==='Other'?'':i+1}</td><td style="white-space:nowrap">${code(r.code)}${r.name}</td>
+    <td class="r num">${fmt(r.sessions)}</td><td><div class="track"><span style="width:${r.share/mxs*100}%;background:var(${r.code==='GB'?'--c1':'--c3'})"></span></div></td>
+    <td class="r num"><span class="${r.change>=0?'up':'down'}">${r.change>=0?'+':''}${r.change}%</span></td><td class="r num">${r.dirRate.toFixed(1)}%</td><td class="small muted" style="white-space:nowrap">${r.top}</td></tr>`).join('');
+  $$('#countryTable th.sortable').forEach(th=>th.textContent=th.textContent.replace(/ [▾▴]$/,'')+(th.dataset.k===countrySort.k?(countrySort.dir<0?' ▾':' ▴'):''));
+
+  const parts=[['Local (lives in the area)',30,'--c1'],['Rest of Scotland',11,'--c4'],['Rest of UK',9,'--c2'],['International',50,'--c3']];
+  let off=25,ds='<circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--surface-2)" stroke-width="6"/>';
+  parts.forEach(([,p,c])=>{ds+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="var(${c})" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${off}"/>`;off-=p});
+  ds+=`<text x="21" y="21" text-anchor="middle" font-size="6" font-weight="700" fill="var(--text)">70%</text><text x="21" y="27" text-anchor="middle" font-size="3.4" fill="var(--muted)">visitors</text>`;
+  $('#originDonut').innerHTML=ds;
+  $('#originLegend').innerHTML=parts.map(([l,p,c])=>`<span><i style="background:var(${c})"></i>${l} · ${p}%</span>`).join('');
+  const months=['May','Jun','Jul','Aug','Sep','Oct'], iv=[.38,.47,.58,.61,.52,.48];
+  $('#intlMonths').innerHTML=`<div class="bars">${months.map((m,i)=>`<div class="row" style="grid-template-columns:40px 1fr 44px"><span class="small">${m}</span><div class="track"><span style="width:${iv[i]/.7*100}%;background:var(--c3)"></span></div><span class="small num" style="text-align:right">${Math.round(iv[i]*100)}%</span></div>`).join('')}</div>`;
+}
+$$('#countryTable th.sortable').forEach(th=>th.onclick=()=>{countrySort={k:th.dataset.k,dir:countrySort.k===th.dataset.k?-countrySort.dir:-1};renderAdmin()});
+const TOP=[['Kiln & Kettle','Café','Merchiston/Bruntsfield'],['Thistledown Books','Bookshop','Merchiston/Bruntsfield'],['Tweed Valley Provisions','Deli','Galashiels/Tweedbank'],['The Wee Kiln Studio','Gallery','Merchiston/Bruntsfield'],['Braid Hills Bistro','Restaurant','Craiglockhart'],['Gala Water Gifts','Gift shop','Galashiels/Tweedbank'],['Calder Corner Bakehouse','Bakery','Sighthill/Calder']]
+  .map((t,i)=>({t,trend:[...Array(14)].map(()=>40+rnd()*30+i*2)}));
+function renderAdmin(){
+  const n=+$('#aRange').value, sel=$('#aArea').value;
+  const areas=sel==='all'?AREAS:AREAS.filter(a=>a.name===sel);
+  const cur=a=>a.slice(-n), prev=a=>a.slice(-2*n,-n);
+  const tot=k=>DATES.map((_,i)=>sum(areas.map(a=>a[k][i])));
+  const S=tot('sessions'),V=tot('views'),D=tot('dirs');
+  const s=sum(cur(S)), v=sum(cur(V)), d=sum(cur(D));
+  const biz=sum(areas.map(a=>a.biz));
+  $('#aKpis').innerHTML=
+    kpi('App sessions',s,sum(prev(S)),cur(S),css('--brand'))+
+    kpi('Profile views',v,sum(prev(V)),cur(V),css('--brand'))+
+    kpi('Directions handed off',d,sum(prev(D)),cur(D),css('--accent'))+
+    `<div class="card kpi"><div class="l">Listed businesses</div><div class="v num">${biz}</div><div class="d"><span class="up">+3</span> approved this period</div></div>`+
+    `<div class="card kpi"><div class="l">Businesses viewed per session</div><div class="v num">${(v/s).toFixed(1)}</div><div class="d">Discovery depth</div></div>`;
+
+  $('#aLegend').innerHTML=areas.map(a=>`<span><i style="background:var(${a.c})"></i>${a.name}</span>`).join('');
+  lineChart($('#aChart'),areas.map(a=>({name:a.name,color:css(a.c),data:cur(a.sessions),fill:areas.length===1})),cur(DATES));
+
+  funnel('#aFunnel',[['Sessions',s],['Opened a pin',s*0.82],['Viewed a profile',s*0.64],['Tapped directions',d]]);
+
+  const rows=AREAS.map(a=>{const vs=sum(cur(a.views)),ds=sum(cur(a.dirs));return{name:a.name,c:a.c,biz:a.biz,sessions:sum(cur(a.sessions)),views:vs,dirs:ds,conv:ds/vs*100}})
+    .sort((p,q)=>(p[areaSort.k]-q[areaSort.k])*areaSort.dir);
+  $('#areaTable tbody').innerHTML=rows.map(r=>`<tr style="${sel!=='all'&&sel!==r.name?'opacity:.4':''}">
+    <td style="white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(${r.c});margin-right:6px"></span>${r.name}</td>
+    <td class="r num">${r.biz}</td>
+    <td><div class="track"><span style="width:${Math.min(r.biz/20,1)*100}%;background:var(${r.biz>=15?'--up':r.biz>=8?'--warn':'--down'})"></span><i style="left:75%"></i></div></td>
+    <td class="r num">${fmt(r.sessions)}</td><td class="r num">${fmt(r.views)}</td><td class="r num">${fmt(r.dirs)}</td><td class="r num">${r.conv.toFixed(1)}%</td></tr>`).join('');
+  $$('#areaTable th.sortable').forEach(th=>th.textContent=th.textContent.replace(/ [▾▴]$/,'')+(th.dataset.k===areaSort.k?(areaSort.dir<0?' ▾':' ▴'):''));
+
+  bars('#aCats',[['Cafés',.31],['Restaurants',.245],['Gift shops',.16],['Bars',.128],['Galleries',.084],['Bookshops',.073]].map(([l,p])=>[l,v*p]));
+  bars('#aFilters',[['Distance',58],['Open now',44],['Rating',37],['Business type',31],['Area picker',22]],{max:100,unit:'%'});
+
+  const parts=[['Allowed',71,'--c1'],['Denied → area picker',22,'--c2'],['Not asked yet',7,'--faint']];
+  let off=25,ds='<circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--surface-2)" stroke-width="6"/>';
+  parts.forEach(([,p,c])=>{ds+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="var(${c})" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${off}"/>`;off-=p});
+  ds+=`<text x="21" y="23.5" text-anchor="middle" font-size="7" font-weight="700" fill="var(--text)">71%</text>`;
+  $('#aDonut').innerHTML=ds;
+  $('#aDonutLegend').innerHTML=parts.map(([l,p,c])=>`<span><i style="background:var(${c})"></i>${l} · ${p}%</span>`).join('');
+
+  const list=TOP.filter(x=>sel==='all'||x.t[2]===sel), tv=v*0.09;
+  $('#topBiz tbody').innerHTML=list.map((x,i)=>{const vv=tv*(1-i*0.11);return `<tr><td class="muted">${i+1}</td><td style="white-space:nowrap"><b>${x.t[0]}</b></td><td class="small">${x.t[1]}</td><td class="small muted" style="white-space:nowrap">${x.t[2]}</td><td class="r num">${fmt(vv)}</td><td class="r num">${fmt(vv*0.15)}</td><td class="r">${spark(x.trend,css('--brand'),'width:80px;height:20px;display:inline-block')}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No businesses</td></tr>';
+
+  const apps=Math.max(3,Math.round(n*0.7*(areas.length/4)));
+  $('#aScreen').innerHTML=[
+    ['Applications received',apps],['Approved',Math.round(apps*0.68)],['Rejected',Math.round(apps*0.2)],['Awaiting human decision',Math.round(apps*0.12)],
+    ['AI and human reviewer agreed','89%'],['Appeals opened',Math.max(1,Math.round(apps*0.06))],['Median time to decision','1.8 days']
+  ].map(([l,x])=>`<div class="stat-row"><span class="muted">${l}</span><b class="num">${x}</b></div>`).join('');
+
+  const calls=Math.round(sum(cur(AREAS.map(a=>a.sessions).reduce((acc,arr)=>acc.map((x,i)=>x+arr[i]))))*0.9), allow=Math.round(n/30*25000);
+  const pct=Math.min(calls/allow*100,100);
+  $('#apiCalls').textContent=`${fmt(calls)} calls`;
+  $('#apiMeter').style.width=pct+'%'; $('#apiMeter').style.background=`var(${pct>80?'--down':pct>60?'--warn':'--brand'})`;
+  $('#apiSub').textContent=`${Math.round(pct)}% of a ${fmt(allow)}-call free allowance · cache hit rate 64%`;
+  $('#apiBadge').textContent=pct>80?'Near limit':pct>60?'Watch':'OK'; $('#apiBadge').className='badge '+(pct>60?'w':'g');
+  renderLogins(n,areas,S);
+  renderCountries(n,areas,s);
+}
+$$('#areaTable th.sortable').forEach(th=>th.onclick=()=>{areaSort={k:th.dataset.k,dir:areaSort.k===th.dataset.k?-areaSort.dir:-1};renderAdmin()});
+['#aArea','#aRange'].forEach(s=>$(s).onchange=renderAdmin);
+$('#aExport').onclick=()=>{const n=+$('#aRange').value;downloadCSV('nook-area-sessions.csv',[['date',...AREAS.map(a=>a.name+' sessions')],...DATES.slice(-n).map((d,i)=>[d.toISOString().slice(0,10),...AREAS.map(a=>a.sessions.slice(-n)[i])])])};
+
+/* ================= BUSINESS ================= */
+const B={views:[],dirs:[],web:[],pins:[],calls:[]};
+DATES.forEach((d,i)=>{const v=Math.round((22+i*0.35)*(wk(d)?1.45:1)*(0.8+rnd()*0.4));B.views.push(v);B.pins.push(Math.round(v*(1.7+rnd()*.3)));B.dirs.push(Math.round(v*(.17+rnd()*.05)));B.web.push(Math.round(v*(.08+rnd()*.03)));B.calls.push(Math.round(v*(.02+rnd()*.02)))});
+const HEAT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,di)=>({d,vals:[...Array(15)].map((_,j)=>{const hr=8+j;return (Math.exp(-((hr-11)**2)/6)*0.9+Math.exp(-((hr-15)**2)/5)*0.7+(di>=5?0.35:0))*(0.85+rnd()*0.3)})}));
+let bMetric='views';
+function renderBiz(){
+  const n=+$('#bRange').value, cur=a=>a.slice(-n), prev=a=>a.slice(-2*n,-n);
+  $('#bKpis').innerHTML=
+    kpi('Map pin taps',sum(cur(B.pins)),sum(prev(B.pins)),cur(B.pins),css('--brand'))+
+    kpi('Profile views',sum(cur(B.views)),sum(prev(B.views)),cur(B.views),css('--brand'))+
+    kpi('Directions taps',sum(cur(B.dirs)),sum(prev(B.dirs)),cur(B.dirs),css('--accent'))+
+    kpi('Website clicks',sum(cur(B.web)),sum(prev(B.web)),cur(B.web),css('--c3'))+
+    kpi('Call taps',sum(cur(B.calls)),sum(prev(B.calls)),cur(B.calls),css('--c4'));
+  const names={views:'Profile views',dirs:'Directions',web:'Website clicks'};
+  lineChart($('#bChart'),[
+    {name:'Previous period',color:css('--faint'),data:prev(B[bMetric]),dash:true},
+    {name:names[bMetric],color:css('--brand'),data:cur(B[bMetric]),fill:true}],cur(DATES));
+  funnel('#bFunnel',[['Shown on the map',sum(cur(B.pins))*4.2],['Pin tapped',sum(cur(B.pins))],['Profile opened',sum(cur(B.views))],['Directions tapped',sum(cur(B.dirs))]]);
+
+  const scale=sum(cur(B.views))/(7*15)/0.75;
+  let h='<span></span>'; for(let hr=8;hr<23;hr++) h+=`<span class="ax">${hr%3===2?hr:''}</span>`;
+  let best={v:0}; const brand=css('--brand'), mxv=Math.max(...HEAT.flatMap(r=>r.vals));
+  HEAT.forEach(r=>{h+=`<span class="ax" style="justify-content:flex-start">${r.d}</span>`;
+    r.vals.forEach((x,j)=>{const views=Math.round(x*scale/4.3); if(x>best.v)best={v:x,d:r.d,hr:8+j};
+      h+=`<span class="c" style="background:color-mix(in srgb,${brand} ${Math.round(x/mxv*100)}%,var(--surface-2))" data-t="${r.d} ${8+j}:00 · ~${views} views"></span>`})});
+  $('#bHeat').innerHTML=h;
+  $$('#bHeat .c').forEach(c=>{c.onmousemove=e=>showTip(e,c.dataset.t);c.onmouseleave=hideTip});
+  $('#bPeak').textContent=`Busiest: ${best.d} around ${best.hr}:00.`;
+
+  const me={v:sum(cur(B.views)),d:sum(cur(B.dirs))}, med={v:me.v*0.72,d:me.d*0.81};
+  const rows=[['Profile views',me.v,med.v,''],['Directions taps',me.d,med.d,''],['View → directions rate',me.d/me.v*100,med.d/med.v*100,'%'],['Photos on listing',3,6,'']];
+  const row=(lab,val,mx,u,muted)=>`<div class="row" style="grid-template-columns:60px 1fr 56px"><span class="small ${muted?'muted':''}">${lab}</span><div class="track"><span style="width:${val/mx*100}%;${muted?'background:var(--faint)':''}"></span></div><span class="small num ${muted?'muted':''}" style="text-align:right">${u?val.toFixed(1)+u:fmt(val)}</span></div>`;
+  $('#bBench').innerHTML=rows.map(([l,a,b,u])=>{const mx=Math.max(a,b)*1.1,pc=Math.round((a-b)/b*100);return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${l}</span><span class="${pc>=0?'up':'down'} num">${pc>=0?'+':''}${pc}%</span></div><div class="bars">${row('You',a,mx,u)}${row('Median',b,mx,u,true)}</div></div>`}).join('');
+
+  const v=sum(cur(B.views));
+  bars('#bSources',[['Browsing the map',.46],['Area explorer',.27],['Search & filters',.19],['Shared link',.08]].map(([l,p])=>[l,v*p]));
+  bars('#bFilters',[['Café',.38],['Within 1 km',.31],['Open now',.24],['Rating 4.5+',.18],['Gift shop',.06]].map(([l,p])=>[l,v*p]));
+
+  const health=[['Opening hours set',true],['Description added',true],['At least 6 photos',false,'3 of 6'],['Website linked',true],['Phone number added',false,'Missing']];
+  const score=Math.round(health.filter(x=>x[1]).length/health.length*100);
+  $('#bHealthScore').textContent=score+'% complete'; $('#bHealthScore').className='badge '+(score>=80?'g':'w');
+  $('#bHealth').innerHTML=health.map(([l,ok,why])=>`<div class="stat-row"><span>${l}</span><span class="${ok?'up':'down'}">${ok?'✓':why}</span></div>`).join('');
+  const bc=[['GB','United Kingdom',.44],['US','United States',.14],['DE','Germany',.08],['FR','France',.06],['ES','Spain',.05],['AU','Australia',.04],['Other','Other',.19]];
+  $('#bCountries').innerHTML=bc.map(([c,nm,p])=>`<div class="row" style="grid-template-columns:170px 1fr 48px"><span class="small" style="white-space:nowrap">${code(c)}${nm}</span><div class="track"><span style="width:${p/.44*100}%;background:var(${c==='GB'?'--c1':'--c3'})"></span></div><span class="small num" style="text-align:right">${Math.round(p*100)}%</span></div>`).join('')+
+    `<p class="small muted" style="margin:8px 0 0">56% of your visitors are from outside the UK.</p>`;
+  const signed=Math.round(v*0.36);
+  $('#bSigned').innerHTML=[
+    ['Views from signed-in users',fmt(signed)+' ('+Math.round(signed/v*100)+'%)'],['Saved you to favourites',fmt(v*0.045)],['Returning visitors',fmt(signed*0.22)],['Shared your profile',fmt(v*0.012)]
+  ].map(([l,x])=>`<div class="stat-row"><span class="muted">${l}</span><b class="num">${x}</b></div>`).join('')+
+    `<div class="note">Favourites and sharing depend on consumer account features, which aren't defined yet.</div>`;
+}
+$$('#bMetric button').forEach(b=>b.onclick=()=>{$$('#bMetric button').forEach(x=>x.setAttribute('aria-pressed',x===b));bMetric=b.dataset.m;renderBiz()});
+$('#bRange').onchange=renderBiz;
+$('#bExport').onclick=()=>{const n=+$('#bRange').value;downloadCSV('business-analytics.csv',[['date','pin_taps','profile_views','directions','website_clicks','call_taps'],...DATES.slice(-n).map((d,i)=>[d.toISOString().slice(0,10),...['pins','views','dirs','web','calls'].map(k=>B[k].slice(-n)[i])])])};
+
+/* ================= shell ================= */
+function renderActive(){ $('#view-admin').classList.contains('active')?renderAdmin():renderBiz(); }
+$$('.switcher button').forEach(b=>b.onclick=()=>{
+  $$('.switcher button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+b.dataset.view));
+  try{localStorage.setItem('nook-view',b.dataset.view)}catch(e){}
+  renderActive();
+});
+$('#themeBtn').onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark';renderActive()};
+let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(renderActive,100)});
+let start='admin'; try{start=localStorage.getItem('nook-view')||'admin'}catch(e){}
+($(`.switcher button[data-view="${start}"]`)||$('.switcher button')).click();
+</script>
+</body>
+</html>
